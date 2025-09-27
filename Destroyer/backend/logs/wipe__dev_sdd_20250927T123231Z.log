@@ -1,0 +1,27 @@
+{
+    "device_details": {
+        "name": "sdd",
+        "path": "/dev/sdd",
+        "size": "1024G",
+        "mountpoint": "/mnt/wslg/distro",
+        "model": "Virtual Disk",
+        "serial": "6002248010e13e08acafeb0a12daf612"
+    },
+    "wipe_mode": "quick",
+    "timestamp_utc": "20250927T123231Z",
+    "success": true,
+    "system_info": {
+        "hostname": "DESKTOP-U6PP1DL",
+        "os": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39"
+    },
+    "tool_version": "1.2.0",
+    "results": [
+        {
+            "cmd": "shred -n 1 -z /dev/sdd",
+            "returncode": 0,
+            "stdout": "[SIMULATED] shred -n 1 -z /dev/sdd",
+            "stderr": ""
+        }
+    ],
+    "log_file": "/home/charon/DESTROYER/backend/logs/wipe__dev_sdd_20250927T123231Z.log"
+}

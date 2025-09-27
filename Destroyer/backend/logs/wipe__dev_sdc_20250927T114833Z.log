@@ -1,0 +1,45 @@
+{
+    "device_details": {
+        "name": "sdc",
+        "path": "/dev/sdc",
+        "size": "2G",
+        "mountpoint": "[SWAP]",
+        "model": "Virtual Disk",
+        "serial": "60022480da610d65e983033b269b87ef"
+    },
+    "wipe_mode": "forensic",
+    "timestamp_utc": "20250927T114833Z",
+    "success": true,
+    "system_info": {
+        "hostname": "DESKTOP-U6PP1DL",
+        "os": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39"
+    },
+    "tool_version": "1.2.0",
+    "results": [
+        {
+            "cmd": "hdparm --dco-restore /dev/sdc",
+            "returncode": 0,
+            "stdout": "[SIMULATED] hdparm --dco-restore /dev/sdc",
+            "stderr": ""
+        },
+        {
+            "cmd": "hdparm -N p`hdparm -N /dev/sdc | grep 'max' | cut -d/ -f2` /dev/sdc",
+            "returncode": 0,
+            "stdout": "[SIMULATED] hdparm -N p`hdparm -N /dev/sdc | grep 'max' | cut -d/ -f2` /dev/sdc",
+            "stderr": ""
+        },
+        {
+            "cmd": "hdparm --user-master u --security-set-pass p /dev/sdc",
+            "returncode": 0,
+            "stdout": "[SIMULATED] hdparm --user-master u --security-set-pass p /dev/sdc",
+            "stderr": ""
+        },
+        {
+            "cmd": "hdparm --user-master u --security-erase-enhanced p /dev/sdc",
+            "returncode": 0,
+            "stdout": "[SIMULATED] hdparm --user-master u --security-erase-enhanced p /dev/sdc",
+            "stderr": ""
+        }
+    ],
+    "log_file": "/home/charon/DESTROYER/backend/logs/wipe__dev_sdc_20250927T114833Z.log"
+}

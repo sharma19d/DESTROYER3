@@ -1,0 +1,7 @@
+Flask
+Pillow
+psutil
+pyzbar
+qrcode
+reportlab
+requests

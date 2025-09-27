@@ -28,7 +28,7 @@ Destroyer is a powerful and secure cross-platform data destruction tool designed
 
 2.  **Clone the Repository:**
     ```bash
-    git clone <your-github-repository-url>
+    git clone https://github.com/sharma19d/DESTROYER3.git
     cd DESTROYER
     ```
 
@@ -51,3 +51,4 @@ Destroyer is controlled via the main interactive CLI. All commands should be run
 ```bash
 cd backend
 python3 wiple_cli.py
+

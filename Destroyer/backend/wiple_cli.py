@@ -3,14 +3,16 @@
 backend/wiple_cli.py
 
 Interactive CLI for Destroyer.
---- NEW: Main menu to select between Local, Remote, or Demo mode ---
+--- MODIFIED FOR RUNNER V2.0 ---
+- Now compatible with the new WipeRunner class.
+- Includes a live status callback to print real-time progress to the console.
 """
 
 import sys
 import os
-import requests # <-- NEW: For making API calls
+import requests
 import json
-import getpass # <-- NEW: For securely entering API key
+import getpass 
 
 # Ensure project root is in sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,24 +23,47 @@ from certificate import generate_certificate
 from verifier import verify_certificate, verify_qr
 
 
+def cli_status_callback(status_update):
+    """
+    NEW: A simple callback to print live status updates to the console,
+    making the CLI interactive and showing real-time progress.
+    """
+    message = status_update.get("message", "")
+    progress = status_update.get("progress", 0)
+    status = status_update.get("status", "unknown")
+    
+    # A simple text-based progress bar
+    bar = '#' * int(progress / 5) # 20 steps for the bar
+    print(f"\r[{status.upper():<7}] {progress:>3}% [{bar:<20}] {message.ljust(50)}", end="")
+    
+    # Print a newline when the process is finished or has failed
+    if status in ['success', 'failed']:
+        print()
+
+
 def print_result(result):
     """Helper function to print wipe results consistently."""
-    print("\n=== Wipe Result ===")
-    success_key = "success"
-    # In demo mode, we use a different key
-    if result.get("is_simulation"):
-        success_key = "status"
-        print(f"Status: {result.get(success_key, 'N/A')}")
+    print("\n\n=== Wipe Result ===")
+    
+    # The new runner uses 'is_simulation' to distinguish demo mode
+    is_demo = result.get("is_simulation", False)
+    
+    if is_demo:
+        print(f"Status: Simulation Success")
     else:
-        print(f"Success: {result.get(success_key)}")
+        print(f"Success: {result.get('success')}")
 
     print(f"Log file: {result.get('log_file', 'N/A')}")
 
     if "results" in result and result["results"]:
         for r in result["results"]:
-            print(f"- {r['cmd']} -> return {r['returncode']}")
-    elif "error" in result:
-        print(f"❌ Error: {result['error']}")
+            # Only print command details on failure, to keep success logs clean
+            if r['returncode'] != 0:
+                print(f"❌ Error in command: {r['cmd']} -> return {r['returncode']}")
+                print(f"   Stderr: {r.get('stderr', '').strip()}")
+
+    if "error" in result:
+        print(f"❌ Fatal Error: {result['error']}")
 
     # Stop if the wipe failed before trying to generate certs
     if not result.get('success'):
@@ -74,10 +99,9 @@ def print_result(result):
 
 
 def run_local_wipe():
-    """Contains the original logic for wiping the local machine."""
+    """Wipes the local machine, now using the new runner."""
     print("\n--- Mode: Wipe Current System ---")
     
-    # This section is the original code from your wiple_cli.py
     devices = list_devices()
     if not devices:
         print("No drives detected.")
@@ -110,24 +134,25 @@ def run_local_wipe():
     execute_choice = input("\nExecute for real? This will permanently destroy data. (y/N): ").strip().lower()
     execute = execute_choice == "y"
 
-    runner = WipeRunner(dry_run=not execute)
-    result = runner.run_wipe(device_info, mode=mode, execute=execute)
+    print("\nStarting wipe process...")
+    # --- FIX: Initialize runner with dry_run flag and callback ---
+    runner = WipeRunner(dry_run=not execute, status_callback=cli_status_callback)
+    # --- FIX: The 'execute' argument is no longer needed here ---
+    result = runner.run_wipe(device_info, mode=mode)
     
     print_result(result)
 
 
 def run_remote_wipe():
-    """NEW: Handles the logic for wiping a remote system via the API."""
+    """Wipes a remote system via the API."""
     print("\n--- Mode: Wipe Remote System ---")
     
-    # 1. Get connection details
     target_ip = input("Enter the target machine IP address: ").strip()
     api_key = getpass.getpass("Enter the API Key: ").strip()
     
     base_url = f"http://{target_ip}:5000"
     headers = {"X-API-Key": api_key}
 
-    # 2. Fetch remote devices
     try:
         print(f"\nConnecting to {target_ip} to get device list...")
         response = requests.get(f"{base_url}/devices", headers=headers, timeout=10)
@@ -157,7 +182,6 @@ def run_remote_wipe():
         print("Invalid choice.")
         return
 
-    # 3. Select wipe mode
     print("\nSelect Wipe Mode:")
     print("1. Quick\n2. Paranoid\n3. Crypto\n4. Forensic")
     mode_choice = input("Enter choice [1/2/3/4]: ").strip()
@@ -167,7 +191,6 @@ def run_remote_wipe():
         return
     mode = mode_map[mode_choice]
 
-    # 4. Final confirmation and execution
     print("\n" + "="*50)
     print("⚠️  CRITICAL WARNING ⚠️")
     print(f"You are about to remotely and PERMANENTLY WIPE the following drive:")
@@ -182,16 +205,16 @@ def run_remote_wipe():
         print("Remote wipe cancelled.")
         return
         
-    # 5. Send wipe command
     payload = {
-        "device": device_info['path'],
+        "device": device_info, # Send the whole device_info object
         "mode": mode,
         "execute": True
     }
     
     print("\nSending remote wipe command...")
     try:
-        response = requests.post(f"{base_url}/wipe", headers=headers, json=payload, timeout=7200) # Long timeout for wipe
+        # TODO: Implement progress polling for remote wipes
+        response = requests.post(f"{base_url}/wipe", headers=headers, json=payload, timeout=7200) # Long timeout
         result = response.json()
         print_result(result)
     except requests.exceptions.RequestException as e:
@@ -199,7 +222,7 @@ def run_remote_wipe():
 
 
 def run_demo_mode():
-    """NEW: Runs a safe, local simulation and generates a demo certificate."""
+    """Runs a safe, local simulation and generates a demo certificate."""
     print("\n--- Mode: Demo / Simulation ---")
     print("This mode will simulate a wipe and generate a sample certificate without destroying any data.")
 
@@ -219,7 +242,6 @@ def run_demo_mode():
         print("Invalid choice.")
         return
 
-    # Mode selection is the same as local
     print("\nSelect Wipe Mode to Simulate:")
     print("1. Quick\n2. Paranoid\n3. Crypto\n4. Forensic")
     mode_choice = input("Enter choice [1/2/3/4]: ").strip()
@@ -229,12 +251,11 @@ def run_demo_mode():
         return
     mode = mode_map[mode_choice]
     
-    # Run the wipe in dry_run mode (execute=False)
-    runner = WipeRunner(dry_run=True)
-    result = runner.run_wipe(device_info, mode=mode, execute=False)
-    
-    # CRITICAL: Add the flag for certificate.py to know this is a simulation
-    result["is_simulation"] = True
+    print("\nStarting simulation...")
+    # --- FIX: Initialize runner with dry_run=True and the callback ---
+    runner = WipeRunner(dry_run=True, status_callback=cli_status_callback)
+    # --- FIX: The 'execute' argument is no longer needed here ---
+    result = runner.run_wipe(device_info, mode=mode)
     
     print_result(result)
 
@@ -244,7 +265,7 @@ def main():
     print("=== Destroyer CLI v2.0 ===")
     
     while True:
-        print("\nPlease select an operation mode:")
+        print("\n\nPlease select an operation mode:")
         print("  1. Wipe Current System")
         print("  2. Wipe Remote System")
         print("  3. Run Demo / Simulation")

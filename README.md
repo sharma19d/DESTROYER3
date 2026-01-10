@@ -1,4 +1,8 @@
 # DESTROYER3
+
+Credentials: admin:destroyer
+             user:user
+
 <img width="395" height="560" alt="Screenshot 2026-01-10 193501" src="https://github.com/user-attachments/assets/fceaa130-bf1e-4cee-ab39-3902446c8a7f" />
 <img width="1439" height="851" alt="Screenshot 2026-01-10 193352" src="https://github.com/user-attachments/assets/527629bc-3862-4dad-a829-6b89d3191095" />
 <img width="1439" height="851" alt="Screenshot 2026-01-10 193343" src="https://github.com/user-attachments/assets/39373f71-d3fe-4813-8047-93d88b4893d7" />
